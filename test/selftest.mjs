@@ -685,24 +685,37 @@ section('Sidebar client bundle');
       Pill: (props) => mini.React.createElement('span', null, props.children),
       Modal: (props) => (props.open === true ? mini.React.createElement('div', null, props.children) : null),
     };
-    const grabComponent = (reactImpl) => {
+    const grabComponent = (reactImpl, clientCtx) => {
       let component = null;
+      let injected = {};
       buildModule(reactImpl, primitiveStub).apply({
         slots: {
           inject: (_name, callback) => {
             driveGenerator(callback());
             return () => {};
           },
-          register: (_options, value) => {
+          register: (options, value) => {
             component = value;
+            // The real slot registry resolves the register `inject` factory and
+            // merges its result into the component props; so does this stand-in.
+            if (typeof options.inject === 'function') injected = options.inject();
+            if (clientCtx !== undefined) injected = { ...injected, clientCtx };
             return () => {};
           },
         },
       });
-      return component;
+      return (props) => component({ ...injected, ...props });
     };
 
-    const closed = mini.render(grabComponent(mini.React)({ wide: true }));
+    /** A locale service reporting one language, as the harness would. */
+    const ctxFor = (active) => ({
+      locale: { getSnapshot: () => ({ active }), subscribe: () => () => {} },
+    });
+
+    // Renders pass an explicit language: Node exposes a global `navigator`, so
+    // the browser-preference fallback would otherwise make these assertions
+    // depend on the machine's own language.
+    const closed = mini.render(grabComponent(mini.React, ctxFor('en'))({ wide: true }));
     check('trigger renders the status dot and label', closed.includes('Fennara'), closed.slice(0, 70));
 
     // The panel body sits behind internal `open` state; starting that one state
@@ -710,19 +723,23 @@ section('Sidebar client bundle');
     const openReact = Object.assign({}, mini.React, {
       useState: (initial) => mini.React.useState(initial === false ? true : initial),
     });
-    const open = mini.render(grabComponent(openReact)({ wide: true }));
+    const open = mini.render(grabComponent(openReact, ctxFor('en'))({ wide: true }));
     check(
       'open panel renders its control buttons',
-      open.includes('跟随当前编辑器') && open.includes('重新扫描') && open.includes('断开绑定'),
+      open.includes('Follow editor') && open.includes('Rescan') && open.includes('Disconnect'),
+      open.slice(0, 90),
     );
     check(
       'open panel renders the runtime and registry sections',
-      open.includes('运行环境') && open.includes('工程仓库') && open.includes('运行中的 Godot 编辑器'),
+      open.includes('Environment') && open.includes('Project registry') && open.includes('Running Godot editors'),
+      open.slice(0, 90),
     );
-    check('the panel offers the update check button', open.includes('检查更新'));
+    check('the panel offers the update check button', open.includes('Check updates'));
 
     // The update line renders from the remembered check result — never from a
     // request of its own — so feeding the status seat a payload is enough.
+    // Timestamps, not the backend's preformatted labels, drive the relative ages
+    // so the panel never mixes two languages.
     const sampleStatus = {
       ok: true,
       install: { installed: true, version: '0.4.3', recordReadable: true },
@@ -736,7 +753,8 @@ section('Sidebar client bundle');
           fennaraVersion: '0.4.2',
           running: false,
           bound: true,
-          lastUsedLabel: '刚刚',
+          lastUsedAt: Date.now() - 30_000,
+          recentAt: Date.now() - 30_000,
         },
         {
           name: 'plain-shader',
@@ -745,7 +763,8 @@ section('Sidebar client bundle');
           fennaraVersion: null,
           running: false,
           bound: false,
-          lastUsedLabel: '3 天前',
+          lastUsedAt: null,
+          recentAt: Date.now() - 3 * 86_400_000,
         },
       ],
       roots: ['E:\\Projects'],
@@ -769,24 +788,26 @@ section('Sidebar client bundle');
         return mini.React.useState(initial === false ? true : initial);
       },
     });
-    const rich = mini.render(grabComponent(dataReact)({ wide: true }));
+    const rich = mini.render(grabComponent(dataReact, ctxFor('en'))({ wide: true }));
     check(
       'a newer release is shown with its release link',
-      rich.includes('发现新版本 0.5.0') && rich.includes('打开发布页'),
+      rich.includes('Version 0.5.0 available') && rich.includes('Open release page'),
+      rich.slice(0, 90),
     );
-    check('lagging project addons are surfaced', rich.includes('addon 落后') && rich.includes('mygame 0.4.2'));
+    check('lagging project addons are surfaced', rich.includes('carry an older addon') && rich.includes('mygame 0.4.2'));
 
     // The registry is split by addon presence, and the group that cannot be
     // bound stays closed until it is asked for.
     check(
       'projects are grouped by addon presence',
-      rich.includes('可绑定 · 含 Fennara addon（1）') && rich.includes('不可绑定 · 无 Fennara addon（1）'),
+      rich.includes('has the Fennara addon (1)') && rich.includes('no Fennara addon (1)'),
     );
-    check('the bindable project is listed with its bind button', rich.includes('mygame') && rich.includes('重新绑定'));
+    check('the bindable project is listed with its bind button', rich.includes('mygame') && rich.includes('Reconnect'));
     check(
       'the group without the addon is collapsed by default',
-      !rich.includes('plain-shader') && rich.includes('展开'),
+      !rich.includes('plain-shader') && rich.includes('Show'),
     );
+    check('relative ages are formatted by the panel itself', rich.includes('last used just now'));
 
     // The same payload with that one toggle flipped open.
     const expandedReact = Object.assign({}, mini.React, {
@@ -799,12 +820,65 @@ section('Sidebar client bundle');
         return mini.React.useState(initial);
       },
     });
-    const expanded = mini.render(grabComponent(expandedReact)({ wide: true }));
+    const expanded = mini.render(grabComponent(expandedReact, ctxFor('en'))({ wide: true }));
     check(
       'expanding reveals the group without the addon',
-      expanded.includes('plain-shader') && expanded.includes('收起'),
+      expanded.includes('plain-shader') && expanded.includes('Hide'),
     );
-    check('rail mode still renders without the label text', !mini.render(grabComponent(mini.React)({ wide: false })).includes('Fennara 离线'));
+    check(
+      'rail mode still renders without the label text',
+      !mini.render(grabComponent(mini.React, ctxFor('en'))({ wide: false })).includes('Fennara offline'),
+    );
+
+    // --- localisation ------------------------------------------------------
+    const texts = buildModule(mini.React, primitiveStub).__texts;
+    const enKeys = Object.keys(texts.en).sort();
+    const zhKeys = Object.keys(texts.zh).sort();
+    check(
+      'both dictionaries carry the same keys',
+      enKeys.length > 0 && enKeys.join('|') === zhKeys.join('|'),
+      `${enKeys.length} en / ${zhKeys.length} zh`,
+    );
+    const cjk = /[\u4e00-\u9fff]/;
+    const englishLeaks = enKeys.filter((key) => cjk.test(texts.en[key]));
+    check('the English table carries no Chinese text', englishLeaks.length === 0, englishLeaks.join(', '));
+
+    // A locale service reporting `zh` must switch the whole panel, including
+    // the ages and the section headers, not just some labels.
+    const zh = mini.render(grabComponent(dataReact, ctxFor('zh'))({ wide: true }));
+    check(
+      'the panel follows the harness language setting',
+      zh.includes('跟随当前编辑器') && zh.includes('工程仓库') && zh.includes('刚刚'),
+      zh.slice(0, 90),
+    );
+    check(
+      'no English label survives the switch',
+      !zh.includes('Follow editor') && !zh.includes('Project registry') && !zh.includes('Check updates'),
+    );
+
+    // An unknown locale falls back to English rather than showing raw keys.
+    const fallback = mini.render(grabComponent(dataReact, ctxFor('fr'))({ wide: true }));
+    check(
+      'an unregistered locale falls back to English',
+      fallback.includes('Follow editor') && !fallback.includes('action.follow'),
+    );
+
+    // With no locale service at all the browser preference decides — the path a
+    // bare render takes. Node exposes `navigator`, so it can be stubbed here.
+    const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+    try {
+      Object.defineProperty(globalThis, 'navigator', { value: { language: 'en-GB' }, configurable: true });
+      const byBrowserEn = mini.render(grabComponent(dataReact)({ wide: true }));
+      Object.defineProperty(globalThis, 'navigator', { value: { language: 'zh-CN' }, configurable: true });
+      const byBrowserZh = mini.render(grabComponent(dataReact)({ wide: true }));
+      check(
+        'without a locale service the browser preference decides',
+        byBrowserEn.includes('Follow editor') && byBrowserZh.includes('跟随当前编辑器'),
+      );
+    } finally {
+      if (originalNavigator) Object.defineProperty(globalThis, 'navigator', originalNavigator);
+      else delete globalThis.navigator;
+    }
   }
 }
 

@@ -1,63 +1,66 @@
 # dsh-plugin-fennara
 
-在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）里管理并连接 **Godot 工程**的插件：一个工程仓库、一个实时状态面板，以及按需挂载的 [Fennara](https://github.com/fennaraOfficial/fennara-godot-ai) MCP 桥。安装后 DSH 侧栏底部会出现 `● Fennara`，圆点即实时状态，点开是面板。
+English | [中文](README.zh.md)
 
-## 功能
+A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH) plugin that manages and connects **Godot projects** through the [Fennara](https://github.com/fennaraOfficial/fennara-godot-ai) MCP bridge: a project registry, a live status panel, and on-demand attachment.
 
-- **工程仓库** —— 扫描你指定的目录，列出其中的 Godot 工程，并标出哪些装了 Fennara addon 及其版本。
-- **分组显示** —— 工程按「可绑定 / 不可绑定」分成两组，后者默认折叠，不挤占可用工程的显示空间。
-- **按最近使用排序** —— 最近用过的工程排在前面，顺序在界面上有依据可循。
-- **一键连接 / 切换 / 断开** —— 只有被绑定的工程才会挂上它的 Fennara 工具；切换工程会自动释放上一个。
-- **跟随正在运行的编辑器** —— 不必手输路径，插件会识别 Godot 编辑器当前打开的是哪个工程。
-- **检查更新** —— 查询 Fennara 在 GitHub 上的最新发布并与本机比对，同时指出哪些工程的 addon 已经落后。
+Once installed, `● Fennara` appears at the bottom of the DSH sidebar — the dot is the live status, and clicking it opens the panel.
 
-## 要求
+## Features
 
-| 项 | 要求 |
+- **Project registry** — scans the folders you point it at and lists the Godot projects it finds, marking which ones carry the Fennara addon and at which version.
+- **Grouped display** — projects are split into can-connect and cannot-connect; the second group is collapsed by default so it never crowds out the usable ones.
+- **Most recently used first** — the projects you used last sort to the top, with the ordering visible in the UI.
+- **One-click connect / switch / disconnect** — only the attached project contributes its Fennara tools, and switching releases the previous attachment.
+- **Follow the running editor** — no paths to type: the plugin detects which project the Godot editor currently has open.
+- **Update check** — queries the latest Fennara release on GitHub and compares it with the installed version, pointing out projects whose addon is behind.
+
+## Requirements
+
+| Item | Requirement |
 |---|---|
-| Godot | 4.5 或更高，且目标工程内已装入 Fennara addon |
-| Fennara | 已在本机安装 |
-| DSH | 使用 web profile 才显示侧栏面板；其它 profile 仍可使用对话内的全部工具 |
-| 系统 | 完整功能需要 Windows；其它平台可显式指定工程使用 |
-| 网络 | 只有「检查更新」需要联网，其余功能完全离线可用 |
+| Godot | 4.5 or newer, with the Fennara addon installed in the target project |
+| Fennara | installed on this machine |
+| DSH | a web profile for the sidebar panel; other profiles still get every tool in conversation |
+| OS | full functionality requires Windows; elsewhere, name the project explicitly |
+| Network | only the update check needs it; everything else works offline |
 
-## 安装
-两种方式，从github下载
+## Install
+
 ```powershell
-dsh plugin --profile web add github:Ziyzou02/dsh-plugin-fennara
-```
-或
-```powershell   # 从 GitHub
-dsh plugin --profile web add link:<本插件目录的绝对路径>            # 本地检出
+dsh plugin --profile web add github:Ziyzou02/dsh-plugin-fennara       # from GitHub
+dsh plugin --profile web add link:<absolute path to this directory>   # local checkout
 ```
 
-**安装后重启 `dsh web`。**
+**Restart `dsh web` afterwards.** The npm package name is `dsh-plugin-fennara`, installable by name once published.
 
-## 使用
+## Usage
 
-### 侧栏面板
+### Sidebar panel
 
-圆点：🟢 已连接且有绑定 · 🔵 daemon 就绪但未绑定 · 🔴 daemon 不可达 · 🟡 状态未读到。
+Dot: 🟢 connected with a project attached · 🔵 daemon ready, nothing attached · 🔴 daemon unreachable · 🟡 status not read yet.
 
-面板自上而下为：操作按钮（`跟随当前编辑器`、`重新扫描`、`断开绑定`、`检查更新`）、运行环境（Fennara 版本、当前绑定、扫描根）、运行中的编辑器（工程与场景）、工程仓库（可绑定的工程逐条带 `绑定` 按钮，未装 addon 的折叠在下方）。
+Top to bottom the panel shows: action buttons (`Follow editor`, `Rescan`, `Disconnect`, `Check updates`), Environment (Fennara version, current attachment, scan roots), running editors (project and scene), and the project registry (connectable projects each with a `Connect` button, projects without the addon collapsed below).
 
-### 对话工具
+The panel follows the harness language setting and ships in English and Chinese.
 
-也可以直接在对话里说「接上我现在开着的 Godot 工程」。
+### Conversation tools
 
-| 工具 | 作用 | 参数 |
+You can also simply ask to attach the Godot editor you have open.
+
+| Tool | Purpose | Parameters |
 |---|---|---|
-| `fennara_projects` | 列出工程与运行状态 | `refresh`、`onlyBindable` |
-| `fennara_search` | 查找 Godot 工程并加入仓库 | `roots`、`maxDepth`、`withFennaraOnly` |
-| `fennara_use` | 绑定工程，或释放当前绑定 | `project`、`auto`、`unbind` |
-| `fennara_health` | 报告 Fennara、daemon 与当前绑定状态 | — |
-| `fennara_update` | 比对 GitHub 最新发布与本机版本 | `fresh` |
+| `fennara_projects` | List projects and their runtime state | `refresh`, `onlyBindable` |
+| `fennara_search` | Find Godot projects and add them to the registry | `roots`, `maxDepth`, `withFennaraOnly` |
+| `fennara_use` | Attach a project, or release the current attachment | `project`, `auto`, `unbind` |
+| `fennara_health` | Report Fennara, daemon and attachment state | — |
+| `fennara_update` | Compare the latest GitHub release with the installed version | `fresh` |
 
-绑定后该工程的工具以 `mcp__<serverName>__<tool>` 出现，例如 `mcp__fennara-mygame__fennara_status`。同一时刻只保留一个绑定；不用时建议 `unbind` 释放。
+An attached project's tools appear as `mcp__<serverName>__<tool>`, for example `mcp__fennara-mygame__fennara_status`. Only one project is attached at a time; `unbind` releases it when you are done.
 
-## 配置
+## Configuration
 
-在 `~/.dsh/profiles/web/cordis.patch.yml` 里按 id 覆盖：
+Override by id in `~/.dsh/profiles/web/cordis.patch.yml`:
 
 ```yaml
 - id: fennara
@@ -66,26 +69,26 @@ dsh plugin --profile web add link:<本插件目录的绝对路径>            # 
     autoBind: true
 ```
 
-> 请使用上面这种 `- id: fennara` 形式；用 `insert:` 插入同一个 id 会追加出第二行，导致插件被挂载两次。按 id 覆盖会整体替换该行的配置，未列出的字段取插件自身默认值。
+> Use the `- id: fennara` form shown above. Inserting the same id with `insert:` appends a second row and mounts the plugin twice. An id-targeted patch replaces that row's configuration wholesale, so any field you leave out falls back to the plugin default.
 
-| 字段 | 默认 | 说明 |
+| Field | Default | Meaning |
 |---|---|---|
-| `roots` | `[]` | 扫描根目录。留空则使用 Godot 编辑器记录的工程列表 |
-| `maxDepth` / `nestedDepth` | `4` / `2` | 扫描深度；嵌套工程的搜索层数 |
-| `autoBind` | `false` | 设为 `true` 时，启动即绑定唯一在运行的那个编辑器所打开的工程 |
-| `toolCallTimeoutMs` | `300000` | 单次 MCP 调用超时 |
-| `daemonPort` | `41287` | Fennara 本地 daemon 端口 |
-| `usageFile` | `~/.dsh/fennara-usage.json` | 「最近使用」记录的存放位置 |
-| `githubRepo` / `githubToken` | `fennaraOfficial/fennara-godot-ai` / — | 检查更新查询的仓库与可选 token |
+| `roots` | `[]` | Folders to scan. Empty means "use the project list the Godot editor already keeps" |
+| `maxDepth` / `nestedDepth` | `4` / `2` | Scan depth; how far to look for nested projects |
+| `autoBind` | `false` | When `true`, attach the project of the only running editor at startup |
+| `toolCallTimeoutMs` | `300000` | Per-call MCP timeout |
+| `daemonPort` | `41287` | Fennara's local daemon port |
+| `usageFile` | `~/.dsh/fennara-usage.json` | Where the "recently used" record is kept |
+| `githubRepo` / `githubToken` | `fennaraOfficial/fennara-godot-ai` / — | Repository queried by the update check, and an optional token |
 
-## 卸载
+## Uninstall
 
 ```powershell
 dsh plugin --profile web remove dsh-plugin-fennara
 ```
 
-插件在本机只留下一份「最近使用」记录（默认 `~/.dsh/fennara-usage.json`），可直接删除。
+The only thing the plugin leaves behind is the "recently used" record (default `~/.dsh/fennara-usage.json`), which you can delete.
 
-## 许可证
+## License
 
-MIT —— 可自由使用、修改、分发，需保留版权与许可声明。
+MIT — free to use, modify and redistribute, provided the copyright and licence notice are retained.

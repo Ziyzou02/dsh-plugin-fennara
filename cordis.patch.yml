@@ -1,0 +1,48 @@
+# dsh-plugin-fennara — DSH bundle patch
+#
+# The mount declaration: DSH stacks every bundle's patch when a profile boots,
+# which is how this plugin enters the config tree.
+#
+# Install (pick one):
+#   dsh plugin --profile web add dsh-plugin-fennara
+#   dsh plugin --profile web add github:<owner>/dsh-plugin-fennara
+#   dsh plugin --profile web add link:<path to this directory>
+#
+# The plugin is plain JavaScript with no runtime dependencies: it resolves
+# @deepseek-ai/dsh-mcp-client from the profile at runtime, so where the package
+# itself is installed does not matter.
+#
+# CHANGING THESE SETTINGS — use an id-targeted entry, never another `insert:`.
+# This file already INSERTS the `fennara` row; inserting the same id again
+# appends a SECOND row instead of changing the first, which mounts the plugin
+# twice. Override it by id, in your own profile patch layer
+# (~/.dsh/profiles/web/cordis.patch.yml):
+#
+#   - id: fennara
+#     config:
+#       roots: ['D:\GodotProjects']
+#       autoBind: true
+#
+# An id-targeted patch replaces that row's WHOLE config (there is no deep
+# merge), so restate every field you still want; anything you omit falls back to
+# the plugin's own defaults, not to the values below.
+- insert:
+    - id: fennara
+      name: dsh-plugin-fennara
+      config:
+        # Roots scanned for Godot projects. Empty means "use the projects the
+        # Godot editor already knows about" (%APPDATA%\Godot\projects.cfg), which
+        # works on most machines; add your own folders to widen the search.
+        roots: []
+        # Scan depth overall, and how far to descend inside a project looking for
+        # nested projects (a game repo holding its own tooling project, say).
+        maxDepth: 4
+        nestedDepth: 2
+        # Opt-in: bind the project of the only running Godot editor at startup.
+        # Off by default because an attached project adds its whole tool set to
+        # every request; the panel's "follow the running editor" button does the
+        # same thing on demand.
+        autoBind: false
+        # Per-call timeout for the bridged Fennara tools; its scene-editing and
+        # runtime work is long-running and needs the room.
+        toolCallTimeoutMs: 300000

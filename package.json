@@ -1,0 +1,55 @@
+{
+  "name": "dsh-plugin-fennara",
+  "version": "0.1.0",
+  "description": "Manage and connect Godot projects in DeepSeek Harness through the Fennara MCP bridge: project registry, live status panel, on-demand binding.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "test",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "godot",
+    "fennara",
+    "mcp",
+    "gamedev"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ziyzou02/dsh-plugin-fennara.git"
+  },
+  "homepage": "https://github.com/Ziyzou02/dsh-plugin-fennara#readme",
+  "bugs": {
+    "url": "https://github.com/Ziyzou02/dsh-plugin-fennara/issues"
+  },
+  "author": "Ziyzou02",
+  "license": "MIT"
+}

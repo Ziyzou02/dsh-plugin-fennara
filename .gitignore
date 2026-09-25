@@ -1,0 +1,16 @@
+# Dependencies (the plugin itself has none, but a checkout may have them)
+node_modules/
+
+# Logs and local tooling output
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Packed artifacts
+*.tgz

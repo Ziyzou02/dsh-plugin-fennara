@@ -32,6 +32,10 @@
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
   },
+  "scripts": {
+    "test": "node test/selftest.mjs",
+    "prepublishOnly": "node test/selftest.mjs"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

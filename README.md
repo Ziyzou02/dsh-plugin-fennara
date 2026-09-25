@@ -31,7 +31,7 @@ dsh plugin --profile web add github:Ziyzou02/dsh-plugin-fennara
 dsh plugin --profile web add link:<本插件目录的绝对路径>            # 本地检出
 ```
 
-**安装后重启 `dsh web`。** npm 上同名包为 `dsh-plugin-fennara`，发布后可直接用包名安装。
+**安装后重启 `dsh web`。**
 
 ## 使用
 
